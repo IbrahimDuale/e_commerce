@@ -13,20 +13,25 @@ Table accounts {
 }
 
 Table carts {
-  "user id" integer [primary key]
+  "cart id" integer [primary key]
   "product id" string [primary key]
   quantity integer
 }
 
-Table "order history" {
+Table "orders metadata" {
   "user id" integer [primary key]
   "purchase date" timestamp [primary key]
+  "order id"  integer [primary key]
+}
+
+Table orders {
+  "order id"  integer [primary key]
   "product id" string [primary key]
   "quantity" string
 }
 
 Table products {
-  "product id" string [primary key]
+  "product id" integer [primary key]
   title string
   description string
   rating integer
@@ -34,27 +39,38 @@ Table products {
 }
 
 Table "product tag mapping" {
-  "product id" string [primary key]
-  "tag name" string [primary key]
+  "product id" integer [primary key]
+  "tag id" integer [primary key]
   
 }
 
 Table "product tags" {
-  "tag name" string [primary key]
-}
-
-Table images {
-  id string [primary key]
-  "image name" string [primary key]
-  image blob 
+  "tag id" integer [primary key]
+  "tag name" string
 }
 
 
-ref: accounts."user id" < carts."user id"
-ref: accounts."user id" < "order history"."user id"
+
+Table "images metadata" {
+  id integer [primary key]
+  "image id" integer [primary key]
+  "image name" string 
+}
+
+Table "images blob store" {
+  "image id"  integer [primary key]
+  image blob
+}
+
+
+
+ref: accounts."user id" - carts."cart id"
+ref: accounts."user id" < "orders metadata"."user id"
 ref: products."product id" < "product tag mapping"."product id"
-ref: images.id  > products."product id"
-ref: images.id > "product tags"."tag name"
-ref: "product tags"."tag name" < "product tag mapping"."tag name"
+ref: "images metadata".id  > products."product id"
+ref: "images metadata".id > "product tags"."tag id"
+ref: "product tags"."tag id" < "product tag mapping"."tag id"
 ref: carts."product id" > products."product id"
-ref: products."product id" < "order history"."product id"
+ref: products."product id" < "orders"."product id"
+ref : orders."order id" > "orders metadata"."order id"
+ref: "images blob store"."image id" - "images metadata"."image id"

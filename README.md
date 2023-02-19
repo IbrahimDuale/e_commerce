@@ -74,7 +74,7 @@ similar to  the Products service
 ##### Products' manager
 Only admin accounts can access this service. This service is used to create a product and/or product category with its associated images and stores them using the appropriate service. This service links the product and/or product categories with the images they were created with stored in the blob store. Additionally, Admins can view, update and delete products and products' categories and their associated images.
 ##### Search
-Anyone can use this service. Used to search products given a query string or filter. When searching by query string, products with tags or parts of their title or description matching the query string are returned. When searching by filter, products with a tag matching the filter are returned.
+Anyone can use this service. Used to search products given a query string or filter. When searching by query string, products with parts of their title or description matching the query string are returned. When searching by filter, products with a tag matching the filter are returned.
 ##### Carts
 Users can only modify their cart. Used to get, add, update, and delete products in their cart.
 ##### Orders' histories
@@ -85,15 +85,71 @@ Helps users securely make a purchase. User does not interact with this service d
 
 ### Database schema
 ![Database Schema.](./images/schema.png)
-*Above is a sql-like view of each table. The database used for each table will depend on the tables requirement. An example: The image table will be implemented as a blob store with each unique tag name or product id being a container containing the images created with it using the Product Manager service.
+*Above is a sql-like view of the nosql database. The only exception is the images blob store table which will be a blob store
 
-## Api design of services
+#### Document model of each table
+##### accounts
+- Document path: accounts/{user ids}
+- Data:
+    - Name
+        - the user's name
 
-### Web server
+##### carts
+- Document path: carts/{cart ids}
+- Data:
+    - product id : quantity
+        - the document will have rows of key-value pairs where the key is the product id and the value is the quantity of that item purchased (capping the number of items a user can have in their cart will restrict the max number of rows in this document to a reasonable amount).
+#### orders metadata
+- Document path: orders_metadata/{user id's}/purchases/{order}
+- Note: sort or index document by timestamp to allow quick pagination by date.
+- Data:
+    - purchase date
+        - time the user completed the purchase
+    - order id 
+        - id used to query in the orders database the products the user ordered
+    - total price
+        - price the user paid for the order
+#### orders
+- Document path: orders/{order id's}
+- Data:
+    - product id : quantity
+        - the document will have rows of key-value pairs where the key is the product id and the value is the quantity of that item purchased (capping the number of items a user can have in their cart will restrict the max number of rows in this document to a reasonable amount).
+#### products
+- Document path: products/{product id's}
+- Data:
+    - title
+        - product's name
+    - description
+        - a small summary of what the product is
+#### product tag mapping
+- Document path: product_tag_map/{product id's}
+- Data:
+    - tag id's 
+        - rows of tag id's associated with the product (a product will not have more than 10 tags).
+#### tags
+- Document path: tags/{tag id's}
+- Data: 
+    - tag_name
+        - name of the tag with the associated id
+#### images
+- Folder path: images/{id's}/{folder names}
+- Variable paths
+    - id's:
+        - the product or tag id the images at this path are associated with. To keep the tag and product id's from clashing the id generated for each product and tag should be obtained from the same key generator.
+    - folder names:
+        - predefined folder names telling the purpose of the responsive images inside (ex. "thumbnail_image_1" will be a folder of responsive images containing the first thumbnail image for the product or tag it's associated with).
+- Data:
+    - images
+        - a list of predefined responsive images associated with the folder(ex 400w.png, 800w.png).
 
+
+
+
+## Api of each service
+*All api calls are asynchronous and return a promise. When the promise succeeds, the data recieved is in the api's Return description. When the promise fails, the string passed description can be found in the api's Exceptions section.
 ### Authentication
 
-#### login(email : string, password : string) : Promise
+#### login(email : string, password : string) : None
 
 ##### Description
 Logs users into their account. On success, behind the scenes an authentication object is recieved and passed during other api calls.
@@ -102,29 +158,74 @@ Logs users into their account. On success, behind the scenes an authentication o
 - email: unique email bound to user's account
 - password: password associated to user's account
 ##### Returns
-- a promise object that on success the user is considered logged in and on failure passes one of the exceptions below as a string.
-
+    - no data
 ##### Exceptions
 - EMAIL_DNE: The email does not exist.
 - WRONG_PASSWORD: The password is incorrect.
-- SERVER_ERROR: The Api call failed because the server did not respond.
+- SERVER_ERROR: The api call failed because the server did not respond.
 
-##### logout() : Promise
-##### is_logged_in : bool
+#### logout() : Promise
+
+#### signup(username : string, email : string, password : string) : Promise
+
+#### is_logged_in : bool
 
 ### Users' accounts
+#### get_user(user_id : string) : Promise
+#### add_user(user_info : object) : Promise
+
 ### Products' categories
+#### get_tags() : Promise
+#### add_tag(tag_name : object) : Promise
+#### update_tag(tag_name : string, new_tag_name : string) : Promise
+#### delete_tag(tag_name : string) : Promise
+
+
 ### Products
+#### get_products(reference = None : string, limit = 20) : Promise
+#### get_product(product_id : string) : Promise
+#### create_product(data : object) : Promise
+#### update_product(product_id : string, data_to_change : object) : Promise
+#### delete_product(product_id : string) : Promise
+
 ### Images' manager
+#### get_products_images(product_id : string) : Promise
+#### get_tag_names_images(tag_name : string) : Promise
+#### add_image(product_id_or_tag_name : string, image_name : string, image : File) : Promise
+#### update_image_name(product_id_or_tag_name : string, image_id : string, new_name : string) : Promise
+#### delete_image(product_id_or_tag_name : string, image_id : string) : Promise
+#### delete_products_images(product_id : string) : Promise
+#### delete_tag_names_images(tag_name : string) : Promise
+
 ### Search
+#### get_products_by_tag(tag_name : string) : Promise
+#### get_products_by_key(search_key : string) : Promise
+
 ### Carts
+#### get_users_cart(user_id : string) : Promise
+#### update_cart(user_id : string, product_id : string, quantity : integer ) : Promise
+#### delete_from_cart(user_id : string, product_id : string) : Promise
+
 ### Checkouts
+#### start_purchase(user_id : string) : Promise
+
 ### Orders' histories
+#### get_order_history(user_id : string) : Promise
+#### add_cart_to_order_history() : Promise
+
 ### Products' manager
+#### get_products(paginate_token = None : string, limit = 20) : Promise
+#### get_tags() : Promise
+#### add_product(product_info : object) : Promise
+#### add_tag(tag_name : object) : Promise
+#### add_image(product_id_or_tag_name : string, image_name : string, image : File) : Promise
+#### update_image_name(product_id_or_tag_name : string, image_id : string, new_name : string) : Promise
+#### update_product(product_id : string, new_product_info : object) : Promise
+#### update_tag(tag_name : string, new_tag_name : string) : Promise
+#### delete_tag(tag_name : string) : Promise
+#### delete_product(product_id : string) : Promise
 
-
-## Implementation
-### Web pages
+## Web pages
 ##### Home
 ##### Login
 ##### Sign up
@@ -139,7 +240,7 @@ Logs users into their account. On success, behind the scenes an authentication o
 ##### Admin's Products
 ##### Admin's Products' Categories
 
-### Technolgies used
+## Tech stack
 ##### React
 ##### React-Router
 ##### React Icons
