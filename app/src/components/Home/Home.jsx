@@ -1,10 +1,10 @@
 import "./Home.css";
-
+import config from "../../configs/config";
 const Home = () => {
 
     return (
         <div className="home">
-            Home
+            {config.title}
         </div>
     )
 }

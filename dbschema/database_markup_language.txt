@@ -1,0 +1,62 @@
+Project online_store {
+  database_type: 'multi database'
+  Note: 'Schema of each database'
+}
+
+Table accounts {
+  "user id" integer [primary key]
+  name string
+  "date of birth" string 
+  email string
+  
+    indexes {
+    "user id" [pk]
+  }
+}
+
+Table carts {
+  "user id" integer [primary key]
+  "product id" string [primary key]
+  quantity integer
+}
+
+Table "order history" {
+  "user id" integer [primary key]
+  "purchase date" timestamp [primary key]
+  "order id" integer [primary key]
+  "product id" string
+  "quantity" string
+}
+
+Table products {
+  "product id" string [primary key]
+  title string
+  description string
+  rating integer
+  
+}
+
+Table "product tag mapping" {
+  "product id" string [primary key]
+  "tag name" string [primary key]
+  
+}
+
+Table "product tags" {
+  "tag name" string [primary key]
+}
+
+Table images {
+  id string [primary key]
+  image blob [primary key]
+}
+
+
+ref: accounts."user id" < carts."user id"
+ref: accounts."user id" < "order history"."user id"
+ref: products."product id" < "product tag mapping"."product id"
+ref: images.id  > products."product id"
+ref: images.id > "product tags"."tag name"
+ref: "product tags"."tag name" < "product tag mapping"."tag name"
+ref: carts."product id" > products."product id"
+ref: products."product id" < "order history"."product id"
