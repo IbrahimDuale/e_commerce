@@ -93,23 +93,21 @@ Helps users securely make a purchase. User does not interact with this service d
 
 ### Authentication
 
-##### login(email : string, password : string) : Promise
-**Description**
-Logs users into their account. On success, behind the scenes an authentication object is recieved and passed during other api calls.<br />
+#### login(email : string, password : string) : Promise
 
-**Parameters**
-email - unique email bound to user's account
-password - password associated to user's account
-<br />
+##### Description
+Logs users into their account. On success, behind the scenes an authentication object is recieved and passed during other api calls.
 
-**Returns**
-a promise object that on success the user is considered logged in and on failure passes one of the exceptions below as a string.
-<br />
+##### Parameters
+- email: unique email bound to user's account
+- password: password associated to user's account
+##### Returns
+- a promise object that on success the user is considered logged in and on failure passes one of the exceptions below as a string.
 
-**Exceptions**
-EMAIL_DNE - The email does not exist.
-WRONG_PASSWORD - The password is incorrect.
-SERVER_ERROR - The Api call failed because the server did not respond.
+##### Exceptions
+- EMAIL_DNE: The email does not exist.
+- WRONG_PASSWORD: The password is incorrect.
+- SERVER_ERROR: The Api call failed because the server did not respond.
 
 ##### logout() : Promise
 ##### is_logged_in : bool

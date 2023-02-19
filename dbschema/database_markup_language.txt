@@ -6,8 +6,6 @@ Project online_store {
 Table accounts {
   "user id" integer [primary key]
   name string
-  "date of birth" string 
-  email string
   
     indexes {
     "user id" [pk]
@@ -23,8 +21,7 @@ Table carts {
 Table "order history" {
   "user id" integer [primary key]
   "purchase date" timestamp [primary key]
-  "order id" integer [primary key]
-  "product id" string
+  "product id" string [primary key]
   "quantity" string
 }
 
@@ -48,7 +45,8 @@ Table "product tags" {
 
 Table images {
   id string [primary key]
-  image blob [primary key]
+  "image name" string [primary key]
+  image blob 
 }
 
 
