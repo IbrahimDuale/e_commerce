@@ -25,7 +25,6 @@
     - visit the Login or Signup page
         - in the Login or Signup page, users can
             - login or signup and on success be redirected back to the Home page
-                - if the user's cart is non-empty it'll be merged with their account's cart
     - logout if logged in
     - search products using a search box
         - When search is entered, user is directed to the Products page and can
@@ -88,11 +87,15 @@ Helps users securely make a purchase. User does not interact with this service d
 *Above is a sql-like view of the tables in the nosql database. The only exception is the images table which will be implemented as a blob store.
 
 #### accounts
-- Document path: accounts/{user ids}
+- Document path: accounts/{user id}
 - Data:
     - Name
         - the user's name
-
+#### user access
+- Document path: accounts/{user id}
+- Data:
+    access
+        - User's access level; a string that's either USER or ADMIN.
 #### carts
 - Document path: carts/{cart id}/products/{product id}
 - Data:
@@ -146,26 +149,23 @@ Helps users securely make a purchase. User does not interact with this service d
         - the product or category id the images at this path are associated with. To keep the category and product id's from clashing the ids generated for each product and category should be obtained from the same key generator.
 - Data:
     - images
-        - responsive images with predefined names telling which screen is most appropriate for the image(ex 400w_1.png, 800w_1.png).
+        - responsive images with predefined names telling an image use case and screen it's most appropriate (ex thumbnail_400.png, thumbnail_800.png).
 
 
 
 
 ## Api of each service
-*All api calls are asynchronous and return a promise. When the promise succeeds, the data recieved is in the api's Return description. When the promise fails, the description of the exception passed as a string can be found in the api's Exceptions section.
-### authentication
+- *All api calls are asynchronous and return a promise. When the promise fails, the description of the error passed as a string in the catch clause can be found in the api's Errors section.
+- Library: import {function_name1, function_name2, ...} from "path/to/api's/folder/${api's name}.js" 
 
-#### login(email : string, password : string) : None
-
+### auth.js
+#### login(email : string, password : string) : User
 ##### Description
 Logs user into their account. On success, behind the scenes an authentication object is recieved and passed during other api calls.
-
 ##### Parameters
 - email: unique email bound to user's account
 - password: password associated to user's account
-##### Returns
-- no data
-##### Exceptions
+##### Errors
 - EMAIL_DNE: The email does not exist.
 - WRONG_PASSWORD: The password is incorrect.
 - SERVER_ERROR: The api call failed because the server did not respond.
@@ -174,10 +174,10 @@ Logs user into their account. On success, behind the scenes an authentication ob
 
 #### signup(username : string, email : string, password : string) : None
 
-### account
+### account.js
 #### get_user() : User
 
-### category
+### category.js
 #### get_category(category_id : string) : Category
 #### get_categories(after_document? : reference, limit = 100) : Categories
 #### create_category(category_id : string, data : object) : None
@@ -185,34 +185,35 @@ Logs user into their account. On success, behind the scenes an authentication ob
 #### delete_category(category_id : string) : None
 
 
-### Products
+### product.js
 #### get_product(product_id : string) : Product
 #### get_products(after_document? : reference, limit = 100) : Products
 #### create_product(product_id : string, data : object) : None
 #### update_product(product_id : string, data_to_change : object) : None
 #### delete_product(product_id : string) : None
 
-### Images' manager
-#### get_image(product_or_category_id : string, screen : ScreenType, image_number : integer) : Image
-#### add_image(product_or_category_id : string, screen : ScreenType, image_number : integer, image : File) : None
-#### delete_image(product_or_category_id : string, screen : ScreenType, image_number : integer) : None
+### image.js
+#### get_image(product_or_category_id : string, screen : Screen, purpose : ImagesPurpose) : Image
+#### add_image(product_or_category_id : string, screen : Screen, purpose : ImagesPurpose, image : File) : None
+#### delete_image(product_or_category_id : string, screen : Screen, purpose : ImagesPurpose) : None
 
-### Search
+### search.js
 #### get_products_by_category(category_name : string) : Products
 #### get_products_by_title(title : string) : Products
 
-### Carts
+### cart.js
 #### get_cart(user_id : string) : Cart
+#### add_to_cart(user_id : string, product_id : string, quantity : integer) : None
 #### update_cart(user_id : string, product_id : string, quantity : integer ) : None
 #### delete_from_cart(user_id : string, product_id : string) : None
 
-### Checkouts
+### checkout.js
 #### get_stripe_sk(user_id : string) : string 
 
-### Orders' histories
+### order.js
 #### get_order_history(user_id : string, after_document? : reference, limit = 100) : Orders
 
-### Products' manager
+### admin.js
 #### add_product(title : string, description : string, images : Images) : None
 #### add_category(category_name : string, images : Images) : None
 #### delete_category(category_id : string) : None
@@ -220,20 +221,22 @@ Logs user into their account. On success, behind the scenes an authentication ob
 
 
 ### Classes
+- Library: import {function_name1, function_name2, ...} from "path/to/class's/folder/{class's name}.js" 
 #### User
-#### Product
-#### Products
-#### Category
-#### Categories
-#### Image
-#### Images
 #### Cart
-#### Order
 #### Orders
+#### Order
+#### Products
+#### Categories
+#### Images
+#### Product
+#### Category
+#### Image
 
 ### Enumerations
-*Note: format is "Namespace name"."Enumeration Name"
-#### Image.ScreenType 
+- Library: import {function_name1, function_name2, ...} from "path/to/enum's/folder/{enum's name}.js"
+#### Screen 
+#### ImagesPurpose
 
 ## Web pages
 #### Home
