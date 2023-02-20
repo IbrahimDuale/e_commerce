@@ -74,175 +74,185 @@ similar to  the Products service
 ##### Products' manager
 Only admin accounts can access this service. This service is used to create a product and/or product category with its associated images and stores them using the appropriate service. This service links the product and/or product categories with the images they were created with stored in the blob store. Additionally, Admins can view, update and delete products and products' categories and their associated images.
 ##### Search
-Anyone can use this service. Used to search products given a query string or filter. When searching by query string, products with parts of their title or description matching the query string are returned. When searching by filter, products with a tag matching the filter are returned.
+Anyone can use this service. Used to search products given a query string or filter. When searching by query string, products with a title matching the query string are returned. When searching by filter, product categories matching the filter are returned.
 ##### Carts
 Users can only modify their cart. Used to get, add, update, and delete products in their cart.
 ##### Orders' histories
-Gets, and adds summaries of users' purchases. Users restricted to get and add their own purchase summaries.
+Gets, and adds summaries of users' purchases. Users restricted to get their own purchase summaries. Orders are added automatically when a purchase event is fired.
 ##### Checkout
 Helps users securely make a purchase. User does not interact with this service directly.
 
 
 ### Database schema
 ![Database Schema.](./images/schema.png)
-*Above is a sql-like view of the nosql database. The only exception is the images blob store table which will be a blob store
+*Above is a sql-like view of the tables in the nosql database. The only exception is the images table which will be implemented as a blob store.
 
-#### Document model of each table
-##### accounts
+#### accounts
 - Document path: accounts/{user ids}
 - Data:
     - Name
         - the user's name
 
-##### carts
-- Document path: carts/{cart ids}
+#### carts
+- Document path: carts/{cart id}/products/{product id}
 - Data:
-    - product id : quantity
-        - the document will have rows of key-value pairs where the key is the product id and the value is the quantity of that item purchased (capping the number of items a user can have in their cart will restrict the max number of rows in this document to a reasonable amount).
+    - quantity
+        - number of {product id} in the cart
 #### orders metadata
-- Document path: orders_metadata/{user id's}/purchases/{order}
-- Note: sort or index document by timestamp to allow quick pagination by date.
+- Document path: orders_metadata/{user id}/purchases/{generic id}
+- INDEX : purchase date 
 - Data:
     - purchase date
-        - time the user completed the purchase
+        - date the user completed the purchase
     - order id 
-        - id used to query in the orders database the products the user ordered
+        - used to query the products the user ordered associated with the order id 
     - total price
         - price the user paid for the order
 #### orders
-- Document path: orders/{order id's}
+- Document path: orders/{order id}/products/{product id}
 - Data:
-    - product id : quantity
-        - the document will have rows of key-value pairs where the key is the product id and the value is the quantity of that item purchased (capping the number of items a user can have in their cart will restrict the max number of rows in this document to a reasonable amount).
+    - quantity
+        - number of items of {product id}
 #### products
-- Document path: products/{product id's}
+- Document path: products/{product id}
 - Data:
     - title
         - product's name
     - description
         - a small summary of what the product is
-#### product tag mapping
-- Document path: product_tag_map/{product id's}
+#### prices
+- Document path: prices/{product id}
 - Data:
-    - tag id's 
-        - rows of tag id's associated with the product (a product will not have more than 10 tags).
-#### tags
-- Document path: tags/{tag id's}
+    - price
+        - price of the product
+#### product category mapping
+- Document path: product_category_map/{generic id}
+- INDEX category id
+- INDEX product id
+- Data:
+    - category id
+        - id of category associated with product id key
+    - product id
+        - id of product associated with category id key
+#### categories
+- Document path: categories/{category id}
 - Data: 
-    - tag_name
-        - name of the tag with the associated id
+    - category_name
+        - name of the category with the associated id
 #### images
-- Folder path: images/{id's}/{folder names}
+- Folder path: images/{product or category id}/
 - Variable paths
-    - id's:
-        - the product or tag id the images at this path are associated with. To keep the tag and product id's from clashing the id generated for each product and tag should be obtained from the same key generator.
-    - folder names:
-        - predefined folder names telling the purpose of the responsive images inside (ex. "thumbnail_image_1" will be a folder of responsive images containing the first thumbnail image for the product or tag it's associated with).
+    - product or category id:
+        - the product or category id the images at this path are associated with. To keep the category and product id's from clashing the ids generated for each product and category should be obtained from the same key generator.
 - Data:
     - images
-        - a list of predefined responsive images associated with the folder(ex 400w.png, 800w.png).
+        - responsive images with predefined names telling which screen is most appropriate for the image(ex 400w_1.png, 800w_1.png).
 
 
 
 
 ## Api of each service
-*All api calls are asynchronous and return a promise. When the promise succeeds, the data recieved is in the api's Return description. When the promise fails, the string passed description can be found in the api's Exceptions section.
-### Authentication
+*All api calls are asynchronous and return a promise. When the promise succeeds, the data recieved is in the api's Return description. When the promise fails, the description of the exception passed as a string can be found in the api's Exceptions section.
+### authentication
 
 #### login(email : string, password : string) : None
 
 ##### Description
-Logs users into their account. On success, behind the scenes an authentication object is recieved and passed during other api calls.
+Logs user into their account. On success, behind the scenes an authentication object is recieved and passed during other api calls.
 
 ##### Parameters
 - email: unique email bound to user's account
 - password: password associated to user's account
 ##### Returns
-    - no data
+- no data
 ##### Exceptions
 - EMAIL_DNE: The email does not exist.
 - WRONG_PASSWORD: The password is incorrect.
 - SERVER_ERROR: The api call failed because the server did not respond.
 
-#### logout() : Promise
+#### logout() : None
 
-#### signup(username : string, email : string, password : string) : Promise
+#### signup(username : string, email : string, password : string) : None
 
-#### is_logged_in : bool
+### account
+#### get_user() : User
 
-### Users' accounts
-#### get_user(user_id : string) : Promise
-#### add_user(user_info : object) : Promise
-
-### Products' categories
-#### get_tags() : Promise
-#### add_tag(tag_name : object) : Promise
-#### update_tag(tag_name : string, new_tag_name : string) : Promise
-#### delete_tag(tag_name : string) : Promise
+### category
+#### get_category(category_id : string) : Category
+#### get_categories(after_document? : reference, limit = 100) : Categories
+#### create_category(category_id : string, data : object) : None
+#### update_category(category_id : string, data-to-change : object) : None
+#### delete_category(category_id : string) : None
 
 
 ### Products
-#### get_products(reference = None : string, limit = 20) : Promise
-#### get_product(product_id : string) : Promise
-#### create_product(data : object) : Promise
-#### update_product(product_id : string, data_to_change : object) : Promise
-#### delete_product(product_id : string) : Promise
+#### get_product(product_id : string) : Product
+#### get_products(after_document? : reference, limit = 100) : Products
+#### create_product(product_id : string, data : object) : None
+#### update_product(product_id : string, data_to_change : object) : None
+#### delete_product(product_id : string) : None
 
 ### Images' manager
-#### get_products_images(product_id : string) : Promise
-#### get_tag_names_images(tag_name : string) : Promise
-#### add_image(product_id_or_tag_name : string, image_name : string, image : File) : Promise
-#### update_image_name(product_id_or_tag_name : string, image_id : string, new_name : string) : Promise
-#### delete_image(product_id_or_tag_name : string, image_id : string) : Promise
-#### delete_products_images(product_id : string) : Promise
-#### delete_tag_names_images(tag_name : string) : Promise
+#### get_image(product_or_category_id : string, screen : ScreenType, image_number : integer) : Image
+#### add_image(product_or_category_id : string, screen : ScreenType, image_number : integer, image : File) : None
+#### delete_image(product_or_category_id : string, screen : ScreenType, image_number : integer) : None
 
 ### Search
-#### get_products_by_tag(tag_name : string) : Promise
-#### get_products_by_key(search_key : string) : Promise
+#### get_products_by_category(category_name : string) : Products
+#### get_products_by_title(title : string) : Products
 
 ### Carts
-#### get_users_cart(user_id : string) : Promise
-#### update_cart(user_id : string, product_id : string, quantity : integer ) : Promise
-#### delete_from_cart(user_id : string, product_id : string) : Promise
+#### get_cart(user_id : string) : Cart
+#### update_cart(user_id : string, product_id : string, quantity : integer ) : None
+#### delete_from_cart(user_id : string, product_id : string) : None
 
 ### Checkouts
-#### start_purchase(user_id : string) : Promise
+#### get_stripe_sk(user_id : string) : string 
 
 ### Orders' histories
-#### get_order_history(user_id : string) : Promise
-#### add_cart_to_order_history() : Promise
+#### get_order_history(user_id : string, after_document? : reference, limit = 100) : Orders
 
 ### Products' manager
-#### get_products(paginate_token = None : string, limit = 20) : Promise
-#### get_tags() : Promise
-#### add_product(product_info : object) : Promise
-#### add_tag(tag_name : object) : Promise
-#### add_image(product_id_or_tag_name : string, image_name : string, image : File) : Promise
-#### update_image_name(product_id_or_tag_name : string, image_id : string, new_name : string) : Promise
-#### update_product(product_id : string, new_product_info : object) : Promise
-#### update_tag(tag_name : string, new_tag_name : string) : Promise
-#### delete_tag(tag_name : string) : Promise
-#### delete_product(product_id : string) : Promise
+#### add_product(title : string, description : string, images : Images) : None
+#### add_category(category_name : string, images : Images) : None
+#### delete_category(category_id : string) : None
+#### delete_product(product_id : string) : None
+
+
+### Classes
+#### User
+#### Product
+#### Products
+#### Category
+#### Categories
+#### Image
+#### Images
+#### Cart
+#### Order
+#### Orders
+
+### Enumerations
+*Note: format is "Namespace name"."Enumeration Name"
+#### Image.ScreenType 
 
 ## Web pages
-##### Home
-##### Login
-##### Sign up
-##### Products
-##### Product
-##### Cart
-##### Checkout
-##### Successful Purchase
-##### Order History
-##### Admin's Dashboard
-##### Admin's Login
-##### Admin's Products
-##### Admin's Products' Categories
+#### Home
+#### Login
+#### Sign up
+#### Products
+#### Product
+#### Cart
+#### Checkout
+#### Successful Purchase
+#### Order History
+#### Admin's Dashboard
+#### Admin's Login
+#### Admin's Products
+#### Admin's Products' Categories
 
 ## Tech stack
-##### React
-##### React-Router
-##### React Icons
-##### Firebase
+#### React
+#### React-Router
+#### React Icons
+#### Firebase
 

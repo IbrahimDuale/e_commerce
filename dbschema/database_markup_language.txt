@@ -14,63 +14,64 @@ Table accounts {
 
 Table carts {
   "cart id" integer [primary key]
-  "product id" string [primary key]
+  "product id" integer [primary key]
   quantity integer
 }
 
 Table "orders metadata" {
   "user id" integer [primary key]
-  "purchase date" timestamp [primary key]
+  "purchase date" date [primary key]
   "order id"  integer [primary key]
+  price float
 }
 
 Table orders {
   "order id"  integer [primary key]
-  "product id" string [primary key]
-  "quantity" string
+  "product id" integer [primary key]
+  "quantity" integer
 }
 
 Table products {
   "product id" integer [primary key]
   title string
   description string
-  rating integer
   
 }
 
-Table "product tag mapping" {
+Table "product category mapping" {
   "product id" integer [primary key]
-  "tag id" integer [primary key]
+  "category id" integer [primary key]
   
 }
 
-Table "product tags" {
-  "tag id" integer [primary key]
-  "tag name" string
+Table categories {
+  "category id" integer [primary key]
+  "category name" string
 }
 
 
 
-Table "images metadata" {
-  id integer [primary key]
-  "image id" integer [primary key]
-  "image name" string 
+Table images {
+  "product or category id"  integer [primary key]
+  purpose PurposeType [primary key]
+  screen ScreenType [primary key]
+  image blob 
 }
 
-Table "images blob store" {
-  "image id"  integer [primary key]
-  image blob
+Table prices {
+  "price id" integer [primary key]
+  price float
 }
 
 
 
-ref: accounts."user id" - carts."cart id"
+ref: accounts."user id" < carts."cart id"
 ref: accounts."user id" < "orders metadata"."user id"
-ref: products."product id" < "product tag mapping"."product id"
-ref: "images metadata".id  > products."product id"
-ref: "images metadata".id > "product tags"."tag id"
-ref: "product tags"."tag id" < "product tag mapping"."tag id"
+ref: products."product id" < "product category mapping"."product id"
+ref: images."product or category id"  > products."product id"
+ref: images."product or category id" > categories."category id"
+ref: categories."category id" < "product category mapping"."category id"
 ref: carts."product id" > products."product id"
 ref: products."product id" < "orders"."product id"
 ref : orders."order id" > "orders metadata"."order id"
-ref: "images blob store"."image id" - "images metadata"."image id"
+ref: prices."price id" - products."product id"
