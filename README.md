@@ -85,15 +85,18 @@
 #### Admin Products
 #### Admin Categories
 
+### API
+
 ## Tech stack
-### Material Ui
-### React
-### React-Router
-### React Icons
-### Firestore (document storage by firebase)
-### Fire Storage (blob storage by firebase)
-### Stripe
-### Algolia
+### Material Ui (Styling)
+### React (Front end Framework)
+### React-Router (Single page web app)
+### Firebase authentication 
+### Cloud function  api end points
+### Firestore (document storage)
+### Firestorage (blob storage)
+### Stripe (Payment system)
+### Algolia (Search)
 
 ## Extra APIs
 - background functions used
