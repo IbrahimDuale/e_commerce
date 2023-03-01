@@ -33,16 +33,22 @@
         - in the Login or Signup page, users can
             - login or signup and on success be redirected back to the Home page
     - logout if logged in
-    - search products using a search box
-        - When search is entered, user is directed to the Products page and can
-            - view products' summaries matching the search string
+    - view all products' categories
+        - clicking a category takes the user to the Products page filtered by the clicked category
+            - view products' summaries matching the category
                 - clicking a product takes the user to the Product page where they can
                     - view the product in greater detail
                     - add the product to their cart
                 - sort products by date added, price, and popularity
                 - filter products by brand, color, size and material
-    - view all products' categories
-        - clicking a category takes the user to the Products page filtered by the clicked category
+    - search products using a search box
+        - When search is entered, user is directed to the Search page and can
+            - view products' summaries matching the search string
+                - clicking a product takes the user to the Product page where they can
+                    - view the product in greater detail
+                    - add the product to their cart
+                - sort products by date added, price, and popularity
+                - filter products by brand, material and category
     - view popular products' summaries
         - clicking a popular product takes the user to the Product page
     - view the quantity of products in their cart. clicking the cart will take user to the Cart page where they can
@@ -70,6 +76,7 @@
 #### Sign up
 #### Products
 #### Product
+#### Search
 #### Cart
 #### Checkout
 #### Order History
