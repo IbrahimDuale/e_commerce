@@ -1,0 +1,180 @@
+Project online_store {
+  database_type: 'multi database'
+  Note: 'Schema of each database'
+}
+
+Table customers {
+  id int [primary key]
+  name varchar
+  email varchar
+  active_cart_id int [note: 'user can have multiple carts and this is the active one']
+}
+
+Table orders_metadata {
+  id int [primary key]
+  customers_id int 
+  purchase_date date 
+  status order_status
+  total_price float
+  indexes {
+    (customers_id, purchase_date) [note: 'allows for date pagination for each user']
+  }
+}
+
+Table orders_products {
+  order_id int [primary key]
+  product_id int [primary key]
+  color_id int [primary key]
+  size_id int [primary key]
+  unit_price float [note: 'includes sale reduction to allow easy order quantity edits without cancellation of order']
+  quantity int
+
+}
+
+Table users_carts {
+  customers_id int [primary key]
+  cart_id int [primary key]
+  cart_name varchar
+}
+
+Table carts_products {
+  id int [primary key]
+  product_id int [primary key]
+  color_id int [primary key]
+  size_id int [primary key]
+  quantity int
+
+}
+
+Table categories {
+  id int [primary key]
+  name varchar
+}
+
+//To make the tree building faster a well known sentinel root id should be used.
+Table category_tree {
+  parent_id int [primary key]
+  child_id int [primary key]
+}
+
+
+Table products_metadata {
+  id int [primary key]
+  active bool [note: 'if false product is archived']
+  name varchar
+  description varchar
+  main_category_id int
+  sub1_category_id int
+  sub2_category_id int
+  sub3_category_id int
+  default_price float [note: 'used if product"s color-size price excluded']
+  date_added timestamp
+  purchases int
+  indexes {
+    (active, main_category_id, sub1_category_id, sub2_category_id, sub3_category_id, default_price) //pagination by price
+    (active, main_category_id, sub1_category_id, sub2_category_id, sub3_category_id, date_added) //pagination by new
+    (active, main_category_id, sub1_category_id, sub2_category_id, sub3_category_id, purchases) //pagination by popularity
+  }
+}
+
+Table products_group {
+  product_id int [primary key, ref: - products_metadata.id]
+  group_id int
+  name varchar
+  indexes {
+    (group_id, product_id)
+  }
+}
+
+Table groups {
+  id int [primary key, ref: < products_group.group_id]
+  name varchar
+  description varchar
+}
+
+Table products_compositions {
+  product_id int [primary key]
+  material material [primary key]
+  percent float
+  decription varchar [note: 'optional, states where the material is located']
+}
+
+Table products {
+  product_id int [primary key]
+  color color [primary key]
+  size size [primary key]
+  price float
+  sale_reduction float
+  purchases int
+  quantity int
+}
+
+Table brands {
+  id int [primary key]
+  name varchar
+}
+
+Table products_care_instructions {
+  product_id int [primary key]
+  instruction product_instructions [primary key]
+  indexes {
+    product_id
+  }
+}
+
+Table products_brands {
+  product_id int [primary key]
+  brand_id int [primary key]
+}
+
+Table products_images {
+  product_id int [primary key]
+  color color [primary key]
+  screen screen [primary key]
+  use use [primary key]  
+  images blob
+
+}
+
+//can combine with products_image but must becareful for clashing ids
+Table categories_images {
+  category_id int [primary key]
+  screen screen [primary key]
+  use use [primary key]
+  image blob
+}
+
+//can combine with products_image but must becareful for clashing ids
+Table brands_images {
+  brand_id int [primary key]
+  screen screen [primary key]
+  use use [primary key]
+  image blob
+}
+
+
+
+
+
+ref: customers.id < orders_metadata.customers_id
+ref: customers.id < users_carts.customers_id
+ref: customers.active_cart_id < carts_products.id
+ref: customers.active_cart_id - users_carts.cart_id
+ref: orders_metadata.id < orders_products.order_id
+ref: categories.id < category_tree.parent_id
+ref: categories.id < category_tree.child_id
+ref: categories.id < products_metadata.main_category_id
+ref: categories.id < products_metadata.sub1_category_id
+ref: categories.id < products_metadata.sub2_category_id
+ref: categories.id < products_metadata.sub3_category_id
+ref: categories.id < categories_images.category_id
+ref: carts_products.id > users_carts.cart_id
+ref: products_metadata.id < orders_products.product_id
+ref: products_metadata.id < carts_products.product_id
+ref: products_metadata.id < products.product_id
+ref: products_metadata.id < products_compositions.product_id
+ref: products_metadata.id < products_care_instructions.product_id
+ref: products_metadata.id < products_images.product_id
+ref: products_metadata.id < products_brands.product_id
+ref: brands.id < brands_images.brand_id
+ref: brands.id < products_brands.brand_id
