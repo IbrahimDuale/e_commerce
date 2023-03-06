@@ -46,50 +46,25 @@ Table carts_products {
 
 }
 
-Table categories {
+Table tags {
   id int [primary key]
   name varchar
 }
 
-//To make the tree building faster a well known sentinel root id should be used.
-Table category_tree {
-  parent_id int [primary key]
-  child_id int [primary key]
+Table products_tags {
+  product_id int [primary key]
+  tag_id int [primary key]
 }
 
 
 Table products_metadata {
   id int [primary key]
-  active bool [note: 'if false product is archived']
+  archived bool [note: 'if false product is archived']
   name varchar
   description varchar
-  main_category_id int
-  sub1_category_id int
-  sub2_category_id int
-  sub3_category_id int
   default_price float [note: 'used if product"s color-size price excluded']
   date_added timestamp
   purchases int
-  indexes {
-    (active, main_category_id, sub1_category_id, sub2_category_id, sub3_category_id, default_price) //pagination by price
-    (active, main_category_id, sub1_category_id, sub2_category_id, sub3_category_id, date_added) //pagination by new
-    (active, main_category_id, sub1_category_id, sub2_category_id, sub3_category_id, purchases) //pagination by popularity
-  }
-}
-
-Table products_group {
-  product_id int [primary key, ref: - products_metadata.id]
-  group_id int
-  name varchar
-  indexes {
-    (group_id, product_id)
-  }
-}
-
-Table groups {
-  id int [primary key, ref: < products_group.group_id]
-  name varchar
-  description varchar
 }
 
 Table products_compositions {
@@ -128,17 +103,17 @@ Table products_brands {
 }
 
 Table products_images {
-  product_id int [primary key]
+  id int [primary key]
   color color [primary key]
   screen screen [primary key]
   use use [primary key]  
-  images blob
+  image blob
 
 }
 
 //can combine with products_image but must becareful for clashing ids
-Table categories_images {
-  category_id int [primary key]
+Table tags_images {
+  id int [primary key]
   screen screen [primary key]
   use use [primary key]
   image blob
@@ -146,7 +121,7 @@ Table categories_images {
 
 //can combine with products_image but must becareful for clashing ids
 Table brands_images {
-  brand_id int [primary key]
+  id int [primary key]
   screen screen [primary key]
   use use [primary key]
   image blob
@@ -161,20 +136,16 @@ ref: customers.id < users_carts.customers_id
 ref: customers.active_cart_id < carts_products.id
 ref: customers.active_cart_id - users_carts.cart_id
 ref: orders_metadata.id < orders_products.order_id
-ref: categories.id < category_tree.parent_id
-ref: categories.id < category_tree.child_id
-ref: categories.id < products_metadata.main_category_id
-ref: categories.id < products_metadata.sub1_category_id
-ref: categories.id < products_metadata.sub2_category_id
-ref: categories.id < products_metadata.sub3_category_id
-ref: categories.id < categories_images.category_id
 ref: carts_products.id > users_carts.cart_id
 ref: products_metadata.id < orders_products.product_id
 ref: products_metadata.id < carts_products.product_id
 ref: products_metadata.id < products.product_id
 ref: products_metadata.id < products_compositions.product_id
 ref: products_metadata.id < products_care_instructions.product_id
-ref: products_metadata.id < products_images.product_id
+ref: products_metadata.id < products_images.id
 ref: products_metadata.id < products_brands.product_id
-ref: brands.id < brands_images.brand_id
+ref: products_tags.product_id > products_metadata.id
+ref: tags.id < products_tags.tag_id
+ref: tags.id < tags_images.id
+ref: brands.id < brands_images.id
 ref: brands.id < products_brands.brand_id

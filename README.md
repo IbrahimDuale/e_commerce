@@ -65,7 +65,7 @@
 - An admin, after logging into the Admin login page, can search, view, add, edit and delete products and products' categories.
 
 ### Database schema
-![Database Schema.](./images/schema_with_enum.png)
+![Database Schema.](./images/schema_small.png.png)
 *Above is a sql-like view of the table. The markup language can be found at [database's markup language](./dbschema/db_markup_short.txt). A document model can be found at [databases document model](./dbschema/document_database_model.js)
 
 
