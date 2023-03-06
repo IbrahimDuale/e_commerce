@@ -94,23 +94,17 @@ const orders_products = {
  * 
  * INDEX: id
  * KEY: id
- * Description: All Categories will be queried and a variable length tree will be generated reflecting category paths (ex Men -> Clothing -> jeans -> regular fit).
+ * Description: All tags will be queried and a variable length tree will be generated reflecting tag paths (ex Men -> Clothing -> jeans -> regular fit).
  */
-const categories = {
+const tags = {
     //To make the tree building faster there should be a sentinel root with a well known id
     id: "int",
     name: "varchar",
-    children: ["category_id1",],
+    children: ["tag_id1",],
 }
 
 /**
  * 
- * Products have at most 4 categories to specify it. (ex. Men -> Clothes -> Jeans -> Regular fit);
- * Need 3 indexes for three ways to order: popularity, price, and recency.
- * Index: (active, main_category, sub1_category, sub2_category, sub3_category, default_price)
- * Index: (active, main_category, sub1_category, sub2_category, sub3_category, date_added)
- * Index: (active, main_category, sub1_category, sub2_category, sub3_category, total_purchases)
- * Filters: price range (can use price index), colors, sizes, brands, materials
  * KEY: id
  */
 const products = {
@@ -118,16 +112,9 @@ const products = {
     name: "varchar",
     description: "varchar",
     //if false product is archived and should not show up in search results
-    active: "boolean",
-    //used to determine the product's group
-    group_id: "int",
-    //product's group name
-    group_name: "varchar",
-    //categories used for indexing
-    main_category: "int",
-    sub1_category: "int",
-    sub2_category: "int",
-    sub3_category: "int",
+    archived: "boolean",
+    //All tags such as men's jeans, men's skinny jeans etc.
+    tags: ["tag_id1"],
     //allows search by recency
     date_added: "timestamp",
     //allows search by popularity. Total purchases of all colors
@@ -214,8 +201,8 @@ const brands_images = {
     }]
 }
 
-//same as brands images but the category's id is the key.
-const category_images = { ...brands_images }
+//same as brands images but the tag's id is the key.
+const tag_images = { ...brands_images }
 
 /**
  * Optional: could use an enum
@@ -269,22 +256,9 @@ const products_image_uses = {
 const brands_image_uses = { ...products_image_uses }
 
 //same as above
-const categories_image_uses = { ...brands_image_uses }
+const tags_image_uses = { ...brands_image_uses }
 
-/**
- * OPTIONAL
- * INDEX: id
- * KEY: id
- * Description: Groups similar products (ex. A jacket that has a polyester and a more expensive leather version).
- * 
- */
-const products_group = {
-    id: "integer",
-    name: "varchar",
-    description: "varchar",
-    products: ["product_id1",],
 
-}
 /**
  * Optional, could use an enumerator.
  * INDEX: ID
@@ -300,12 +274,12 @@ const screen_sizes = {
 
 /**
  * OPTIONAL
- * INDEX: category_id
- * KEY: category_id
- * Description: Quick way to suggest sizes based on  category when creating products
+ * INDEX: tag_id
+ * KEY: tag_id
+ * Description: Quick way to suggest sizes based on  tag when creating products
  */
-const category_to_sizes = {
-    category_id: "int",
+const tag_to_sizes = {
+    tag_id: "int",
     sizes: ["size_id1",],
 
 }
