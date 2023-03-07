@@ -113,7 +113,7 @@ const products = {
     description: "varchar",
     //if false product is archived and should not show up in search results
     archived: "boolean",
-    //All tags such as men's jeans, men's skinny jeans etc.
+    //All tags such as jeans, men, child, skinny jeans, etc.
     tags: ["tag_id1"],
     //allows search by recency
     date_added: "timestamp",
