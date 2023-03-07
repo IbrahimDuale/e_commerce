@@ -4,20 +4,20 @@ Project online_store {
 }
 
 Table customers {
-  id int [primary key]
+  user_id int [primary key]
   name varchar
   email varchar
   active_cart_id int [note: 'user can have multiple carts and this is the active one']
 }
 
 Table orders_metadata {
-  id int [primary key]
-  customers_id int 
+  order_id int [primary key]
+  user_id int 
   purchase_date date 
-  status order_status
+  status_id int
   total_price float
   indexes {
-    (customers_id, purchase_date) [note: 'allows for date pagination for each user']
+    (user_id, purchase_date) [note: 'allows for date pagination for each user']
   }
 }
 
@@ -31,14 +31,21 @@ Table orders_products {
 
 }
 
+Table order_statuses {
+  status_id int [primary key, ref: < orders_metadata.status_id]
+  name varchar
+  description varchar
+}
+
+
 Table users_carts {
-  customers_id int [primary key]
+  user_id int [primary key]
   cart_id int [primary key]
   cart_name varchar
 }
 
 Table carts_products {
-  id int [primary key]
+  cart_id int [primary key]
   product_id int [primary key]
   color_id int [primary key]
   size_id int [primary key]
@@ -47,7 +54,7 @@ Table carts_products {
 }
 
 Table tags {
-  id int [primary key]
+  tag_id int [primary key]
   name varchar
 }
 
@@ -58,43 +65,67 @@ Table products_tags {
 
 
 Table products_metadata {
-  id int [primary key]
+  product_id int [primary key]
   archived bool [note: 'if false product is archived']
   name varchar
   description varchar
   default_price float [note: 'used if product"s color-size price excluded']
-  date_added timestamp
+  date_added date
   purchases int
 }
 
 Table products_compositions {
   product_id int [primary key]
-  material material [primary key]
+  material_id int [primary key]
   percent float
   decription varchar [note: 'optional, states where the material is located']
 }
 
+Table material {
+  material_id int [primary key, ref: < products_compositions.material_id]
+  name varchar
+  description varchar
+}
+
 Table products {
   product_id int [primary key]
-  color color [primary key]
-  size size [primary key]
+  color_id int [primary key]
+  size_id int [primary key]
   price float
   sale_reduction float
   purchases int
   quantity int
 }
 
+Table colors {
+  color_id int [primary key, ref: < products.color_id]
+  name varchar
+  description varchar
+}
+
+Table sizes {
+  size_id int [primary key, ref: < products.size_id, ref: < brands_images.size_id, ref: < products_images.size_id, ref: < tags_images.size_id]
+  name varchar
+  description varchar
+}
+
 Table brands {
-  id int [primary key]
+  brand_id int [primary key]
   name varchar
 }
 
 Table products_care_instructions {
   product_id int [primary key]
-  instruction product_instructions [primary key]
+  instruction_id int [primary key]
   indexes {
     product_id
   }
+}
+
+Table instructions {
+  instruction_id int [primary key, ref: < products_care_instructions.instruction_id]
+  name varchar
+  description varchar
 }
 
 Table products_brands {
@@ -103,49 +134,54 @@ Table products_brands {
 }
 
 Table products_images {
-  id int [primary key]
-  color color [primary key]
-  screen screen [primary key]
-  use use [primary key]  
+  product_id int [primary key]
+  color_id int [primary key, ref: > colors.color_id]
+  size_id int [primary key]
+  use_id int [primary key, ref: > uses.use_id]  
   image blob
 
 }
 
 //can combine with products_image but must becareful for clashing ids
 Table tags_images {
-  id int [primary key]
-  screen screen [primary key]
-  use use [primary key]
+  tag_id int [primary key]
+  size_id int [primary key]
+  use_id int [primary key, ref: > uses.use_id]
   image blob
 }
 
 //can combine with products_image but must becareful for clashing ids
 Table brands_images {
-  id int [primary key]
-  screen screen [primary key]
-  use use [primary key]
+  brand_id int [primary key]
+  size_id int [primary key]
+  use_id int [primary key, ref: > uses.use_id]
   image blob
+}
+
+Table uses {
+  use_id int [primary key]
+  name varchar
+  description varchar
 }
 
 
 
 
-
-ref: customers.id < orders_metadata.customers_id
-ref: customers.id < users_carts.customers_id
-ref: customers.active_cart_id < carts_products.id
+ref: customers.user_id < orders_metadata.user_id
+ref: customers.user_id < users_carts.user_id
+ref: customers.active_cart_id < carts_products.cart_id
 ref: customers.active_cart_id - users_carts.cart_id
-ref: orders_metadata.id < orders_products.order_id
-ref: carts_products.id > users_carts.cart_id
-ref: products_metadata.id < orders_products.product_id
-ref: products_metadata.id < carts_products.product_id
-ref: products_metadata.id < products.product_id
-ref: products_metadata.id < products_compositions.product_id
-ref: products_metadata.id < products_care_instructions.product_id
-ref: products_metadata.id < products_images.id
-ref: products_metadata.id < products_brands.product_id
-ref: products_tags.product_id > products_metadata.id
-ref: tags.id < products_tags.tag_id
-ref: tags.id < tags_images.id
-ref: brands.id < brands_images.id
-ref: brands.id < products_brands.brand_id
+ref: orders_metadata.order_id < orders_products.order_id
+ref: carts_products.cart_id > users_carts.cart_id
+ref: products_metadata.product_id < orders_products.product_id
+ref: products_metadata.product_id < carts_products.product_id
+ref: products_metadata.product_id < products.product_id
+ref: products_metadata.product_id < products_compositions.product_id
+ref: products_metadata.product_id < products_care_instructions.product_id
+ref: products_metadata.product_id < products_images.product_id
+ref: products_metadata.product_id < products_brands.product_id
+ref: products_tags.product_id > products_metadata.product_id
+ref: tags.tag_id < products_tags.tag_id
+ref: tags.tag_id < tags_images.tag_id
+ref: brands.brand_id < brands_images.brand_id
+ref: brands.brand_id < products_brands.brand_id
